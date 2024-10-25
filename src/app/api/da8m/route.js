@@ -28,7 +28,7 @@ export async function POST(request) {
       headers: {
         'Host': 'api.da8m.cn',
         'Connection': 'keep-alive',
-        'Content-Type': 'multipart/form-data; boundary=----WebKitFormBoundaryOyCILgYMA6Y7d8bf', // 使用正确的边界
+        'Content-Type': 'multipart/form-data; boundary=----WebKitFormBoundaryOyCILgYMA6Y7d8bf',
         'token': '4ca04a3ff8ca3b8f0f8cfa01899ddf8e',
         'sec-ch-ua': '"Chromium";v="130", "Microsoft Edge";v="130", "Not?A_Brand";v="99"',
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 Edg/130.0.0.0'
@@ -36,12 +36,18 @@ export async function POST(request) {
       body: newFormData
     });
 
-    const textResponse = await res.text(); // 先以文本形式获取响应
+    const textResponse = await res.text(); // 以文本形式获取响应
     console.log('Response Text:', textResponse); // 打印响应内容
 
-    const responseData = JSON.parse(textResponse); // 尝试将其解析为 JSON
+    let responseData;
+    try {
+      responseData = JSON.parse(textResponse); // 尝试将其解析为 JSON
+      console.log('Parsed JSON:', responseData); // 打印解析后的 JSON
+    } catch (error) {
+      console.log('Failed to parse JSON:', error); // 打印解析错误信息
+    }
 
-    if (res.ok && responseData.status === 1) {
+    if (res.ok && responseData && responseData.status === 1) {
       const fileUrl = responseData.img; // 从响应中获取图片地址
       const data = {
         url: fileUrl,
@@ -54,15 +60,15 @@ export async function POST(request) {
       });
     } else {
       return Response.json({
-        status: responseData.status || 500,
-        message: responseData.message || 'Upload failed',
+        status: responseData ? responseData.status : 500,
+        message: responseData ? responseData.message : 'Upload failed',
         success: false
       }, {
         status: res.status,
         headers: corsHeaders,
       });
     }
-} catch (error) {
+  } catch (error) {
     console.error('Fetch error:', error); // 打印错误信息
     return Response.json({
       status: 500,
@@ -72,4 +78,5 @@ export async function POST(request) {
       status: 500,
       headers: corsHeaders,
     });
+  }
 }
