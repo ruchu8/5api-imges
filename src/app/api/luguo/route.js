@@ -44,6 +44,20 @@ export async function POST(request) {
       body: payload
     });
 
+    // 检查响应状态码
+    if (!res.ok) {
+      const text = await res.text(); // 获取原始文本响应
+      console.error('Response not ok:', text);
+      return Response.json({
+        status: res.status,
+        message: 'Request failed with status ' + res.status + ': ' + text,
+        success: false
+      }, {
+        status: res.status,
+        headers: corsHeaders,
+      });
+    }
+
     const result = await res.json();
     if (result.status_code === 200 && result.success) {
       const imageUrl = result.image.url; // 提取图片的 URL
@@ -51,7 +65,7 @@ export async function POST(request) {
         url: imageUrl,
         code: 200
       };
-      
+
       // 数据库插入逻辑处理
       // ...
 
@@ -73,7 +87,7 @@ export async function POST(request) {
   } catch (error) {
     return Response.json({
       status: 500,
-      message: ` ${error.message}`,
+      message: error.message || 'An unexpected error occurred',
       success: false
     }, {
       status: 500,
