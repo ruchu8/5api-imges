@@ -32,8 +32,10 @@ export async function POST(request) {
     });
 
     const resdata = await res.text(); // 直接获取返回的文本
+    const parsedData = JSON.parse(resdata); // 解析 JSON 文本
+    const imageUrl = `https://assets.da8m.cn/${parsedData.imgurl}`; // 构建完整的图片 URL
 
-    return new Response(resdata, {
+    return new Response(imageUrl, {
       status: 200,
       headers: corsHeaders,
     });
