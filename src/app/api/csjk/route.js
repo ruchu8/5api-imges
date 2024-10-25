@@ -1,23 +1,34 @@
-addEventListener('fetch', event => {
-  event.respondWith(handleDa8mRequest(event.request));
-});
+export const runtime = 'edge';
+import { getRequestContext } from '@cloudflare/next-on-pages';
 
-/* 
-  接口来自 https://mlw10086.serv00.net/pic/
-*/
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Max-Age': '86400', // 24 hours
+  'Content-Type': 'application/json'
+};
 
-async function handleDa8mRequest(request) {
-  console.log('Request received:', request.url);
+/**
+ * 
+ * 接口来自 https://mlw10086.serv00.net/pic/
+ * 
+ */
+
+export async function POST(request) {
+  const { env, cf, ctx } = getRequestContext();
+  const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || request.socket.remoteAddress;
+  const clientIp = ip ? ip.split(',')[0].trim() : 'IP not found';
+  const Referer = request.headers.get('Referer') || "Referer";
 
   if (request.method !== 'POST') {
-    return new Response('Method not allowed', { status: 405 });
+    return new Response('Method not allowed', { status: 405, headers: corsHeaders });
   }
 
   try {
     const formData = await request.formData();
     const file = formData.get('image'); // 使用 'image' 字段名
     if (!file) {
-      return new Response('No file uploaded', { status: 400 });
+      return new Response('No file uploaded', { status: 400, headers: corsHeaders });
     }
 
     const newFormData = new FormData();
@@ -37,35 +48,25 @@ async function handleDa8mRequest(request) {
         'Origin': 'https://mlw10086.serv00.net',
         'Pragma': 'no-cache',
         'Priority': 'u=1, i',
-        'Referer': 'https://mlw10086.serv00.net/',
+        'Referer': Referer,
         'Sec-Ch-Ua': '"Chromium";v="128", "Not;A=Brand";v="24", "Google Chrome";v="128"',
         'Sec-Ch-Ua-Mobile': '?0',
         'Sec-Ch-Ua-Platform': '"Windows"',
         'Sec-Fetch-Dest': 'empty',
         'Sec-Fetch-Mode': 'cors',
         'Sec-Fetch-Site': 'cross-site',
-        'Sign': 'e346dedcb06bace9cd7ccc6688dd7ca1', // 替换为动态生成的sign值
-        'Source': 'h5',
-        'Tenantid': '3',
-        'Timestamp': '1725792862411', // 替换为动态生成的timestamp值
-        'Token': '4ca04a3ff8ca3b8f0f8cfa01899ddf8e', // 请替换成有效的 token
+        // 'Sign', 'Timestamp', 'Token' 需替换为动态生成的值
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36'
       }
     });
 
-    console.log('Response status:', response.status);
     const responseText = await response.text();
-    console.log('Response body:', responseText);
-
     try {
       const jsonResponse = JSON.parse(responseText);
       if (jsonResponse.status === 1 && jsonResponse.imgurl) {
         // 根据 imgurl 构建正确的图片链接
         const correctImageUrl = `https://assets.da8m.cn/${jsonResponse.imgurl}`;
-        return new Response(correctImageUrl, {
-          status: 200,
-          headers: { 'Content-Type': 'text/plain' }
-        });
+        return Response.json({ url: correctImageUrl }, { status: 200, headers: corsHeaders });
       }
     } catch (e) {
       console.error('Failed to parse JSON:', e);
@@ -73,10 +74,10 @@ async function handleDa8mRequest(request) {
 
     return new Response(responseText, {
       status: response.status,
-      headers: response.headers
+      headers: { ...corsHeaders, ...response.headers }
     });
   } catch (error) {
     console.error('Error:', error);
-    return new Response('Internal Server Error', { status: 500 });
+    return new Response('Internal Server Error', { status: 500, headers: corsHeaders });
   }
 }
