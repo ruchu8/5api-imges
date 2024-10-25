@@ -5,7 +5,7 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'Content-Type',
   'Access-Control-Max-Age': '86400', // 24 hours
-  'Content-Type': 'application/json' // 设置为 JSON 格式
+  'Content-Type': 'text/plain' // 设置为文本格式
 };
 
 export async function POST(request) {
@@ -13,7 +13,7 @@ export async function POST(request) {
   const formData = await request.formData();
   const file = formData.get('file'); // 使用 'file' 字段名
   if (!file) {
-    return new Response(JSON.stringify({ message: 'No file uploaded' }), { status: 400, headers: corsHeaders });
+    return new Response('No file uploaded', { status: 400, headers: corsHeaders });
   }
 
   try {
@@ -32,43 +32,38 @@ export async function POST(request) {
       }
     });
 
-    const resdata = await res.json(); // 直接获取返回的 JSON
+    const resdata = await res.text(); // 直接获取返回的文本
+    console.log('Response data:', resdata); // 打印响应数据用于调试
 
-    // 检查响应状态
-    if (resdata.url) {
-      const data = {
-        "url": resdata.url,
-        "code": 200,
-        "name": resdata.url.split('/').pop() // 获取文件名
-      };
+    // 文本处理，提取图片链接
+    const urlMatch = resdata.match(/"url":"([^"]+)"/); // 匹配 URL
+
+    if (urlMatch) {
+      const correctImageUrl = urlMatch[1]; // 提取 URL
 
       try {
         if (env.IMG) {
           const nowTime = await get_nowTime();
-          await insertImageData(env.IMG, resdata.url, "", "", 7, nowTime); // 插入数据
+          await insertImageData(env.IMG, correctImageUrl, "", "", 7, nowTime); // 插入数据
         }
       } catch (error) {
         console.error('Failed to insert image data:', error);
       }
 
-      return Response.json(data, { status: 200, headers: corsHeaders });
+      return new Response(correctImageUrl, {
+        status: 200,
+        headers: corsHeaders,
+      });
+
     } else {
-      return Response.json({
-        status: 500,
-        message: `Upload failed`,
-        success: false
-      }, {
+      return new Response('Upload failed or URL not found', {
         status: 500,
         headers: corsHeaders,
       });
     }
 
   } catch (error) {
-    return Response.json({
-      status: 500,
-      message: ` ${error.message}`,
-      success: false
-    }, {
+    return new Response(`Error: ${error.message}`, {
       status: 500,
       headers: corsHeaders,
     });
