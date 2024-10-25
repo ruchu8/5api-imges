@@ -11,78 +11,72 @@ const corsHeaders = {
 // 处理 POST 请求的异步函数，接收图像文件并将其上传到指定的 URL。
 export async function POST(request) {
   const { env } = getRequestContext();
-  const formData = await request.formData();
-  const imageFile = formData.get('file');
   
-  if (!imageFile) return new Response('Image file not found', { status: 400 });
-
-  // 设置需要上传的额外参数
-  const timestamp = Date.now().toString();
-  const auth_token = '792509aed7df9d601ef6b4b5608e69c56541a5e1'; // 这里填入您的 auth_token
-  const nsfw = '0'; // 这里设置 nsfw 参数
-
-  // 构建新的请求负载
-  const payload = new FormData();
-  payload.append('source', new Blob([await imageFile.arrayBuffer()], { type: imageFile.type }), imageFile.name);
-  payload.append('type', 'file');
-  payload.append('action', 'upload');
-  payload.append('timestamp', timestamp);
-  payload.append('auth_token', auth_token);
-  payload.append('nsfw', nsfw);
-
   try {
-    const res = await fetch('https://imgse.com/json', {
+    // 解析请求中的表单数据
+    const formData = await request.formData();
+    const file = formData.get('image'); // 前端上传的字段名为 'image'
+
+    if (!file) {
+      return new Response('No file uploaded', { status: 400 });
+    }
+
+    // 创建新的 FormData，用于发送到目标接口
+    const newFormData = new FormData();
+    newFormData.append('files', file, file.name); // 目标接口要求字段名为 'files'
+
+    // 设置目标接口所需的头部信息
+    const targetHeaders = {
+      'Accept': 'application/json',
+      'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7',
+      'Cache-Control': 'no-cache',
+      'Pragma': 'no-cache',
+      'Priority': 'u=1, i',
+      'Sec-CH-UA': '"Google Chrome";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
+      'Sec-CH-UA-Mobile': '?0',
+      'Sec-CH-UA-Platform': '"Windows"',
+      'Sec-Fetch-Dest': 'empty',
+      'Sec-Fetch-Mode': 'cors',
+      'Sec-Fetch-Site': 'none',
+      'X-Requested-With': 'XMLHttpRequest'
+    };
+
+    // 目标上传接口的 URL
+    const targetUrl = 'https://kefu-jtalk.jd.com/jtalk/hfive/resource/image/upload';
+
+    // 发送请求到目标接口
+    const response = await fetch(targetUrl, {
       method: 'POST',
-      headers: {
-        'Host': 'imgse.com',
-        'Connection': 'keep-alive',
-        'Accept': 'application/json',
-        'Origin': 'https://imgse.com',
-        'Referer': 'https://imgse.com/i/pAwW1iT',
-        // 不需要手动设置 Content-Type，浏览器会自动处理
-      },
-      body: payload
+      headers: targetHeaders,
+      body: newFormData
     });
 
-    // 检查响应状态码
-    if (!res.ok) {
-      const text = await res.text(); // 获取原始文本响应
-      console.error('Response not ok:', text);
-      return Response.json({
-        status: res.status,
-        message: 'Request failed with status ' + res.status + ': ' + text,
-        success: false
-      }, {
-        status: res.status,
-        headers: corsHeaders,
-      });
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Upload failed: Status ${response.status}, Body: ${errorText}`);
+      return new Response(`Upload failed: ${errorText}`, { status: response.status });
     }
 
-    const result = await res.json();
-    if (result.status_code === 200 && result.success) {
-      const imageUrl = result.image.url; // 提取图片的 URL
-      const data = {
-        url: imageUrl,
-        code: 200
-      };
+    // 解析目标接口的响应
+    const responseData = await response.json();
+    console.log('Response from JD API:', responseData);
 
-      // 数据库插入逻辑处理
-      // ...
+    // 从响应中提取图片 URL
+    const uploadUrl = responseData?.data?.[0]?.url;
 
-      return Response.json(data, {
-        status: 200,
-        headers: corsHeaders,
-      });
-    } else {
-      return Response.json({
-        status: 400,
-        message: result.status_txt || 'Upload failed',
-        success: false
-      }, {
-        status: 400,
-        headers: corsHeaders,
-      });
+    if (!uploadUrl) {
+      return new Response('Failed to retrieve uploaded image URL', { status: 400 });
     }
+
+    // 返回成功的响应
+    return Response.json({
+      status: 200,
+      url: uploadUrl,
+      message: 'Upload successful'
+    }, {
+      status: 200,
+      headers: corsHeaders,
+    });
 
   } catch (error) {
     return Response.json({
@@ -95,6 +89,3 @@ export async function POST(request) {
     });
   }
 }
-
-// 获取当前时间的函数和数据库插入函数同之前
-// ...
