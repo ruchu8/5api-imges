@@ -16,12 +16,7 @@ export async function POST(request) {
     const file = formData.get('file');
     const token = formData.get('token'); // Get token from FormData
 
-    if (!file || !token) {
-      return new Response(JSON.stringify({ status: 400, message: 'No file or token provided' }), {
-        status: 400,
-        headers: corsHeaders,
-      });
-    }
+
 
     const uploadUrl = 'https://api.da8m.cn/api/upload';
 
