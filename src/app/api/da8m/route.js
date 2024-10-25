@@ -9,6 +9,7 @@ const corsHeaders = {
 };
 
 export async function POST(request) {
+  const { env } = getRequestContext();
   const formData = await request.formData();
   const file = formData.get('file'); // 使用 'file' 字段名
   if (!file) {
@@ -18,7 +19,7 @@ export async function POST(request) {
   try {
     const newFormData = new FormData();
     newFormData.append('file', file, file.name); // 上传到目标服务器时使用 'file'
-    
+
     const res = await fetch('https://api.da8m.cn/api/upload', {
       method: 'POST',
       body: newFormData,
@@ -32,10 +33,41 @@ export async function POST(request) {
     });
 
     const resdata = await res.text(); // 直接获取返回的文本
-    const parsedData = JSON.parse(resdata); // 解析 JSON 文本
-    const imageUrl = `https://assets.da8m.cn/${parsedData.imgurl}`; // 构建完整的图片 URL
+    // 解析文本
+    let parsedData;
+    try {
+      parsedData = JSON.parse(resdata); // 尝试解析为 JSON
+    } catch (e) {
+      return new Response('Invalid response format', { status: 500, headers: corsHeaders });
+    }
 
-    return new Response(imageUrl, {
+    let correctImageUrl;
+
+    if (parsedData.status === 1 && parsedData.imgurl) {
+      correctImageUrl = `https://assets.da8m.cn/${parsedData.imgurl}`;
+    } else {
+      return new Response(`Error: ${parsedData.message || 'Unknown error'}`, {
+        status: 500,
+        headers: corsHeaders,
+      });
+    }
+
+    const data = {
+      "url": correctImageUrl,
+      "code": 200,
+      "name": parsedData.imgurl
+    };
+
+    try {
+      if (env.IMG) {
+        const nowTime = await get_nowTime();
+        await insertImageData(env.IMG, correctImageUrl, "", "", 7, nowTime); // 修改为根据需要进行插入
+      }
+    } catch (error) {
+      console.error('Failed to insert image data:', error);
+    }
+
+    return new Response(correctImageUrl, {
       status: 200,
       headers: corsHeaders,
     });
@@ -46,4 +78,30 @@ export async function POST(request) {
       headers: corsHeaders,
     });
   }
+}
+
+async function insertImageData(env, src, referer, ip, rating, time) {
+  try {
+    await env.prepare(
+      `INSERT INTO imginfo (url, referer, ip, rating, total, time)
+           VALUES ('${src}', '${referer}', '${ip}', ${rating}, 1, '${time}')`
+    ).run();
+  } catch (error) {
+    console.error('Database insert error:', error);
+  }
+}
+
+async function get_nowTime() {
+  const options = {
+    timeZone: 'Asia/Shanghai',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour12: false,
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  };
+  const timedata = new Date();
+  return new Intl.DateTimeFormat('zh-CN', options).format(timedata);
 }
