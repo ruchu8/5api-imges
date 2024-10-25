@@ -20,25 +20,28 @@ export async function POST(request) {
     const newFormData = new FormData();
     newFormData.append('file', file, file.name); // 上传到目标服务器时使用 'file'
 
-    const res = await fetch('https://api.vviptuangou.com/api/upload', {
+    const res = await fetch('https://api.da8m.cn/api/upload', {
       method: 'POST',
       body: newFormData,
       headers: {
         'Accept': '*/*',
+        'token': '4ca04a3ff8ca3b8f0f8cfa01899ddf8e', // 替换成有效的 token
         'Origin': 'https://mlw10086.serv00.net',
         'Referer': 'https://mlw10086.serv00.net/',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 Edg/130.0.0.0'
       }
     });
 
     const resdata = await res.text(); // 直接获取返回的文本
 
-    // 文本处理，提取图片 URL
-    const statusMatch = resdata.match(/"status":\s*(\d)/);
+    console.log('Response data:', resdata); // 打印响应数据用于调试
+
+    // 文本处理，提取状态和图片链接
+    const statusMatch = resdata.match(/"status":\s*(\d+)/);
     const imgurlMatch = resdata.match(/"imgurl":"([^"]+)"/);
 
     if (statusMatch && statusMatch[1] === '1' && imgurlMatch) {
-      const correctImageUrl = `https://assets.vviptuangou.com/${imgurlMatch[1]}`;
+      const correctImageUrl = `https://assets.da8m.cn/${imgurlMatch[1]}`;
 
       const data = {
         "url": correctImageUrl,
@@ -52,7 +55,7 @@ export async function POST(request) {
           await insertImageData(env.IMG, correctImageUrl, "", "", 7, nowTime);
         }
       } catch (error) {
-        console.error('Insert image data error:', error);
+        console.error('Failed to insert image data:', error);
       }
 
       return new Response(correctImageUrl, {
@@ -61,8 +64,9 @@ export async function POST(request) {
       });
 
     } else {
-      const message = imgurlMatch ? imgurlMatch[1] : 'Unknown error';
-      return new Response(`Error: ${message}`, {
+      const errorMessage = (statusMatch ? `Error: ${statusMatch[1]}` : 'Invalid status') + 
+                           (imgurlMatch ? '' : ' - Image URL not found');
+      return new Response(errorMessage, {
         status: 500,
         headers: corsHeaders,
       });
