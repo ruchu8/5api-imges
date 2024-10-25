@@ -46,7 +46,7 @@ export async function POST(request) {
       try {
         if (env.IMG) {
           const nowTime = await get_nowTime();
-          await insertImageData(env.IMG, result.url, 'https://pic.kamept.com/', 'IP not found', 7, nowTime);
+          await insertImageData(env.IMG, result.url, 'https://pic.kamept.com/',clientIp, 7, nowTime);
         }
       } catch (error) {
         // 处理插入数据库的错误
