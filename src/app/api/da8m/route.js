@@ -8,75 +8,85 @@ const corsHeaders = {
   'Content-Type': 'application/json'
 };
 
-export async function POST(request) {
-  const { env, cf, ctx } = getRequestContext();
+addEventListener('fetch', event => {
+  event.respondWith(handleDa8mRequest(event.request));
+});
 
-  const formData = await request.formData();
-  const file = formData.get('file'); // 确保使用的字段名为 'file'
-  if (!file) {
-    return new Response('No file uploaded', { status: 400 });
+/* 
+  接口来自 https://mlw10086.serv00.net/pic/
+*/
+
+async function handleDa8mRequest(request) {
+  console.log('Request received:', request.url);
+
+  if (request.method !== 'POST') {
+    return new Response('Method not allowed', { status: 405 });
   }
 
-  const uploadUrl = 'https://api.da8m.cn/api/upload';
-
-  const newFormData = new FormData();
-  newFormData.append('file', file);
-
   try {
-    const res = await fetch(uploadUrl, {
-      method: "POST",
+    const formData = await request.formData();
+    const file = formData.get('image'); // 使用 'image' 字段名
+    if (!file) {
+      return new Response('No file uploaded', { status: 400 });
+    }
+
+    const newFormData = new FormData();
+    newFormData.append('file', file, file.name); // 上传到目标服务器时使用 'file'
+
+    const targetUrl = 'https://api.da8m.cn/api/upload';
+
+    const response = await fetch(targetUrl, {
+      method: 'POST',
+      body: newFormData,
       headers: {
-        'Host': 'api.da8m.cn',
-        'Connection': 'keep-alive',
-        'Content-Type': 'multipart/form-data; boundary=----WebKitFormBoundaryOyCILgYMA6Y7d8bf',
-        'token': '4ca04a3ff8ca3b8f0f8cfa01899ddf8e',
-        'sec-ch-ua': '"Chromium";v="130", "Microsoft Edge";v="130", "Not?A_Brand";v="99"',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 Edg/130.0.0.0'
-      },
-      body: newFormData
+        'Accept': 'application/json, text/javascript, */*; q=0.01',
+        'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7',
+        'Branchid': '1002',
+        'Cache-Control': 'no-cache',
+        'DNT': '1',
+        'Origin': 'https://mlw10086.serv00.net',
+        'Pragma': 'no-cache',
+        'Priority': 'u=1, i',
+        'Referer': 'https://mlw10086.serv00.net/',
+        'Sec-Ch-Ua': '"Chromium";v="128", "Not;A=Brand";v="24", "Google Chrome";v="128"',
+        'Sec-Ch-Ua-Mobile': '?0',
+        'Sec-Ch-Ua-Platform': '"Windows"',
+        'Sec-Fetch-Dest': 'empty',
+        'Sec-Fetch-Mode': 'cors',
+        'Sec-Fetch-Site': 'cross-site',
+        'Sign': 'e346dedcb06bace9cd7ccc6688dd7ca1', // 替换为动态生成的sign值
+        'Source': 'h5',
+        'Tenantid': '3',
+        'Timestamp': '1725792862411', // 替换为动态生成的timestamp值
+        'Token': '4ca04a3ff8ca3b8f0f8cfa01899ddf8e', // 请替换成有效的 token
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36'
+      }
     });
 
-    const textResponse = await res.text(); // 以文本形式获取响应
-    console.log('Response Text:', textResponse); // 打印响应内容
+    console.log('Response status:', response.status);
+    const responseText = await response.text();
+    console.log('Response body:', responseText);
 
-    let responseData;
     try {
-      responseData = JSON.parse(textResponse); // 尝试将其解析为 JSON
-      console.log('Parsed JSON:', responseData); // 打印解析后的 JSON
-    } catch (error) {
-      console.log('Failed to parse JSON:', error); // 打印解析错误信息
+      const jsonResponse = JSON.parse(responseText);
+      if (jsonResponse.status === 1 && jsonResponse.imgurl) {
+        // 根据 imgurl 构建正确的图片链接
+        const correctImageUrl = `https://assets.da8m.cn/${jsonResponse.imgurl}`;
+        return new Response(correctImageUrl, {
+          status: 200,
+          headers: { 'Content-Type': 'text/plain' }
+        });
+      }
+    } catch (e) {
+      console.error('Failed to parse JSON:', e);
     }
 
-    if (res.ok && responseData && responseData.status === 1) {
-      const fileUrl = responseData.img; // 从响应中获取图片地址
-      const data = {
-        url: fileUrl,
-        code: 200,
-        message: 'Upload successful'
-      };
-      return Response.json(data, {
-        status: 200,
-        headers: corsHeaders,
-      });
-    } else {
-      return Response.json({
-        status: responseData ? responseData.status : 500,
-        message: responseData ? responseData.message : 'Upload failed',
-        success: false
-      }, {
-        status: res.status,
-        headers: corsHeaders,
-      });
-    }
-  } catch (error) {
-    console.error('Fetch error:', error); // 打印错误信息
-    return Response.json({
-      status: 500,
-      message: `Error: ${error.message}`,
-      success: false
-    }, {
-      status: 500,
-      headers: corsHeaders,
+    return new Response(responseText, {
+      status: response.status,
+      headers: response.headers
     });
+  } catch (error) {
+    console.error('Error:', error);
+    return new Response('Internal Server Error', { status: 500 });
   }
 }
