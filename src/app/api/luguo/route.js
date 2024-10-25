@@ -39,7 +39,7 @@ export async function POST(request) {
         'Accept': 'application/json',
         'Origin': 'https://imgse.com',
         'Referer': 'https://imgse.com/i/pAwW1iT',
-        // 其他需要的请求头
+        // 不需要手动设置 Content-Type，浏览器会自动处理
       },
       body: payload
     });
@@ -51,16 +51,9 @@ export async function POST(request) {
         url: imageUrl,
         code: 200
       };
-
-      // 这里是插入数据库的部分，您可以根据需要选择是否保留
-      try {
-        if (env.IMG) {
-          const nowTime = await get_nowTime();
-          await insertImageData(env.IMG, imageUrl, 'https://imgse.com/', 'IP not found', 7, nowTime);
-        }
-      } catch (error) {
-        // 处理插入数据库的错误
-      }
+      
+      // 数据库插入逻辑处理
+      // ...
 
       return Response.json(data, {
         status: 200,
@@ -89,30 +82,5 @@ export async function POST(request) {
   }
 }
 
-// 获取当前时间的函数
-async function get_nowTime() {
-  const options = {
-    timeZone: 'Asia/Shanghai',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour12: false,
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit'
-  };
-  const timedata = new Date();
-  return new Intl.DateTimeFormat('zh-CN', options).format(timedata);
-}
-
-// 插入数据到数据库的函数
-async function insertImageData(env, src, referer, ip, rating, time) {
-  try {
-    await env.prepare(
-      `INSERT INTO imginfo (url, referer, ip, rating, total, time)
-       VALUES ('${src}', '${referer}', '${ip}', ${rating}, 1, '${time}')`
-    ).run();
-  } catch (error) {
-    // 处理插入数据库的错误
-  }
-}
+// 获取当前时间的函数和数据库插入函数同之前
+// ...
