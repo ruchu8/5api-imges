@@ -5,7 +5,7 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'Content-Type',
   'Access-Control-Max-Age': '86400', // 24 hours
-  'Content-Type': 'text/plain'
+  'Content-Type': 'application/json' // 修改为 JSON, 方便使用
 };
 
 export async function POST(request) {
@@ -33,47 +33,53 @@ export async function POST(request) {
     });
 
     const resdata = await res.text(); // 直接获取返回的文本
-
     console.log('Response data:', resdata); // 打印响应数据用于调试
 
     // 文本处理，提取状态和图片链接
     const statusMatch = resdata.match(/"status":\s*(\d+)/);
     const imgurlMatch = resdata.match(/"imgurl":"([^"]+)"/);
 
+    let correctImageUrl;
+
     if (statusMatch && statusMatch[1] === '1' && imgurlMatch) {
-      const correctImageUrl = `https://assets.da8m.cn/${imgurlMatch[1]}`;
-
-      const data = {
-        "url": correctImageUrl,
-        "code": 200,
-        "name": imgurlMatch[1]
-      };
-
-      try {
-        if (env.IMG) {
-          const nowTime = await get_nowTime();
-          await insertImageData(env.IMG, correctImageUrl, "", "", 7, nowTime);
-        }
-      } catch (error) {
-        console.error('Failed to insert image data:', error);
-      }
-
-      return new Response(correctImageUrl, {
-        status: 200,
-        headers: corsHeaders,
-      });
-
+      correctImageUrl = `https://assets.da8m.cn/${imgurlMatch[1]}`;
     } else {
-      const errorMessage = (statusMatch ? `Error: ${statusMatch[1]}` : 'Invalid status') + 
-                           (imgurlMatch ? '' : ' - Image URL not found');
-      return new Response(errorMessage, {
+      return Response.json({
+        status: 500,
+        message: ` ${statusMatch ? 'Upload failed' : 'Unknown error'}`,
+        success: false
+      }, {
         status: 500,
         headers: corsHeaders,
       });
     }
 
+    const data = {
+      "url": correctImageUrl,
+      "code": 200,
+      "name": imgurlMatch[1]
+    };
+
+    try {
+      if (env.IMG) {
+        const nowTime = await get_nowTime();
+        await insertImageData(env.IMG, correctImageUrl, "", "", 7, nowTime); // 插入数据
+      }
+    } catch (error) {
+      console.error('Failed to insert image data:', error);
+    }
+
+    return Response.json(data, {
+      status: 200,
+      headers: corsHeaders,
+    });
+
   } catch (error) {
-    return new Response(`Error: ${error.message}`, {
+    return Response.json({
+      status: 500,
+      message: ` ${error.message}`,
+      success: false
+    }, {
       status: 500,
       headers: corsHeaders,
     });
