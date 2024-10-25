@@ -10,7 +10,7 @@ const corsHeaders = {
 
 export async function POST(request) {
   const { env, cf, ctx } = getRequestContext();
-  
+
   const formData = await request.formData();
   const file = formData.get('file'); // 确保使用的字段名为 'file'
   if (!file) {
@@ -37,10 +37,12 @@ export async function POST(request) {
     });
 
     const responseData = await res.json();
+    console.log('Response Data:', responseData); // 添加调试信息
 
-    if (res.ok) {
+    if (res.ok && responseData.code === 1) {
+      const fileUrl = `https://xzxx.uir.cn${responseData.data.url}`; // 拼接基本地址和图片路径
       const data = {
-        url: responseData.file_url || 'File uploaded successfully',
+        url: fileUrl,
         code: 200,
         message: 'Upload successful'
       };
@@ -50,8 +52,8 @@ export async function POST(request) {
       });
     } else {
       return Response.json({
-        status: responseData.status || 500,
-        message: responseData.message || 'Upload failed',
+        status: responseData.code || 500,
+        message: responseData.msg || 'Upload failed',
         success: false
       }, {
         status: res.status,
