@@ -9,19 +9,22 @@ const corsHeaders = {
 };
 
 export async function POST(request) {
-  const { env, cf, ctx } = getRequestContext();
+  console.log('Received request for file upload...'); // 第一步，接收到请求
 
+  const { env, cf, ctx } = getRequestContext();
   const formData = await request.formData();
-  const file = formData.get('file');
+  const file = formData.get('file'); // 获取文件字段
   if (!file) {
+    console.log('No file uploaded'); // 没有上传文件
     return new Response('No file uploaded', { status: 400 });
   }
 
   const uploadUrl = 'https://api.da8m.cn/api/upload';
   const newFormData = new FormData();
-  newFormData.append('file', file);
+  newFormData.append('file', file); // 添加文件到 FormData
 
   try {
+    console.log('Preparing to send the file to the upload URL:', uploadUrl); // 准备发送请求
     const res = await fetch(uploadUrl, {
       method: "POST",
       headers: {
@@ -37,18 +40,22 @@ export async function POST(request) {
       body: newFormData
     });
 
+    console.log('Received response from server with status:', res.status); // 查看响应状态
+
     const textResponse = await res.text(); // 捕获文本响应
     console.log('Response Text:', textResponse); // 查看响应文本
 
     let responseData;
     try {
       responseData = JSON.parse(textResponse); // 尝试解析为 JSON
+      console.log('Parsed JSON response:', responseData); // 查看解析后的 JSON
     } catch (err) {
+      console.log('Error parsing JSON:', err.message); // JSON 解析错误
       return Response.json({
         status: 500,
         message: `Error parsing JSON: ${err.message}`,
         success: false,
-        rawResponse: textResponse // 如果 JSON 解析失败，可以返回原始响应
+        rawResponse: textResponse // 返回原始响应
       }, {
         status: 500,
         headers: corsHeaders,
@@ -62,11 +69,13 @@ export async function POST(request) {
         code: 200,
         message: 'Upload successful'
       };
+      console.log('File uploaded successfully:', fileUrl);
       return Response.json(data, {
         status: 200,
         headers: corsHeaders,
       });
     } else {
+      console.log('Upload failed. Response Status:', responseData.status, 'Message:', responseData.message);
       return Response.json({
         status: responseData.status || 500,
         message: responseData.message || 'Upload failed',
