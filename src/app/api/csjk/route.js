@@ -4,6 +4,7 @@ import { getRequestContext } from '@cloudflare/next-on-pages';
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Max-Age': '86400', // 24 hours
   'Content-Type': 'application/json'
 };
@@ -22,6 +23,12 @@ export async function POST(request) {
 
   try {
     const formData = await request.formData();
+    
+    // 打印所有字段以调试
+    for (const [key, value] of formData.entries()) {
+      console.log(`Key: ${key}, Value: ${value}`);
+    }
+
     const file = formData.get('image'); // 使用 'image' 字段名
     if (!file) {
       return new Response('No file uploaded', { status: 400, headers: corsHeaders });
@@ -57,7 +64,6 @@ export async function POST(request) {
     try {
       const jsonResponse = JSON.parse(responseText);
       if (jsonResponse.status === 1 && jsonResponse.imgurl) {
-        // 根据 imgurl 构建正确的图片链接
         const correctImageUrl = `https://assets.vviptuangou.com/${jsonResponse.imgurl}`;
         return Response.json({ url: correctImageUrl }, { status: 200, headers: corsHeaders });
       }
