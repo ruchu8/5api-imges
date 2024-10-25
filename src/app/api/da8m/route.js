@@ -37,9 +37,23 @@ export async function POST(request) {
       body: newFormData
     });
 
-    console.log('Response Status:', res.status); // 查看响应状态
-    const responseData = await res.json();
-    console.log('Response Data:', responseData); // 查看响应数据
+    const textResponse = await res.text(); // 捕获文本响应
+    console.log('Response Text:', textResponse); // 查看响应文本
+
+    let responseData;
+    try {
+      responseData = JSON.parse(textResponse); // 尝试解析为 JSON
+    } catch (err) {
+      return Response.json({
+        status: 500,
+        message: `Error parsing JSON: ${err.message}`,
+        success: false,
+        rawResponse: textResponse // 如果 JSON 解析失败，可以返回原始响应
+      }, {
+        status: 500,
+        headers: corsHeaders,
+      });
+    }
 
     if (res.ok && responseData.status === 1) {
       const fileUrl = responseData.img; // 图片 URL
@@ -55,7 +69,7 @@ export async function POST(request) {
     } else {
       return Response.json({
         status: responseData.status || 500,
-        message: responseData.msg || 'Upload failed',
+        message: responseData.message || 'Upload failed',
         success: false
       }, {
         status: res.status,
