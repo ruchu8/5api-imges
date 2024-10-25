@@ -8,90 +8,101 @@ const corsHeaders = {
   'Content-Type': 'application/json'
 };
 
+// 处理 POST 请求的异步函数，接收图像文件并将其上传到指定的 URL。
 export async function POST(request) {
-  const { env, cf, ctx } = getRequestContext();
-  const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || request.socket.remoteAddress;
-  const clientIp = ip ? ip.split(',')[0].trim() : 'IP not found';
-  const Referer = request.headers.get('Referer') || "Referer";
+  const { env } = getRequestContext();
+  const formData = await request.formData();
+  const imageFile = formData.get('file');
+  if (!imageFile) return new Response('Image file not found', { status: 400 });
 
-  const req_url = new URL(request.url);
+  // 将文件数据转换为 ArrayBuffer
+  const arrayBuffer = await imageFile.arrayBuffer();
+  const base64EncodedData = bufferToBase64(arrayBuffer);
 
-
-  if (request.method === 'OPTIONS') {
-    return new Response(null, {
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type',
-        'Access-Control-Max-Age': '86400', // 24小时
-      },
-    });
-  }
+  // 构建新的请求负载
+  const payload = new FormData();
+  payload.append('file', new Blob([arrayBuffer]), imageFile.name);
 
   try {
-
-    const res = await fetch('https://openai.weixin.qq.com/weixinh5/webapp/h774yvzC2xlB4bIgGfX2stc4kvC85J/cos/upload', {
-      method: request.method,
-      headers: request.headers,
-      body: request.body
+    const res = await fetch('https://pic.kamept.com/upload/y', {
+      method: 'POST',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 Edg/130.0.0.0',
+        'Origin': 'https://pic.kamept.com',
+        'Referer': 'https://pic.kamept.com/',
+        'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6'
+      },
+      body: payload
     });
-    // console.log(res);
-    const resdata = await res.json()
 
-    const data = {
-      "url": resdata.url,
-      "code": 200,
-      "name": resdata.filekey
+    const result = await res.json();
+    if (result.url) {
+      const data = {
+        url: result.url,
+        code: 200
+      };
+
+      // 这里是插入数据库的部分，您可以根据需要选择是否保留
+      try {
+        if (env.IMG) {
+          const nowTime = await get_nowTime();
+          await insertImageData(env.IMG, result.url, 'https://pic.kamept.com/', 'IP not found', 8, nowTime);
+        }
+      } catch (error) {
+        // 处理插入数据库的错误
+      }
+
+      return Response.json(data, {
+        status: 200,
+        headers: corsHeaders,
+      });
+    } else {
+      return Response.json({
+        status: 400,
+        message: 'Upload failed',
+        success: false
+      }, {
+        status: 400,
+        headers: corsHeaders,
+      });
     }
-
-    try {
-      if (env.IMG) {
-        const nowTime = await get_nowTime()
-        await insertImageData(env.IMG, resdata.url, Referer, clientIp, 7, nowTime);
-    }
-    } catch (error) {
-      
-    }
-
-
-    return Response.json(data, {
-      status: 200,
-      headers: corsHeaders,
-    }
-
-    )
-
 
   } catch (error) {
     return Response.json({
       status: 500,
       message: ` ${error.message}`,
       success: false
-    }
-      , {
-        status: 500,
-        headers: corsHeaders,
-      })
+    }, {
+      status: 500,
+      headers: corsHeaders,
+    });
   }
-
 }
 
+// ArrayBuffer 转 Base64
+function bufferToBase64(buf) {
+  var binary = '';
+  var bytes = new Uint8Array(buf);
+  var len = bytes.byteLength;
+  for (var i = 0; i < len; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
+}
 
-
-
+// 插入数据到数据库的函数
 async function insertImageData(env, src, referer, ip, rating, time) {
   try {
-    const instdata = await env.prepare(
+    await env.prepare(
       `INSERT INTO imginfo (url, referer, ip, rating, total, time)
-           VALUES ('${src}', '${referer}', '${ip}', ${rating}, 1, '${time}')`
-    ).run()
+       VALUES ('${src}', '${referer}', '${ip}', ${rating}, 1, '${time}')`
+    ).run();
   } catch (error) {
-
-  };
+    // 处理插入数据库的错误
+  }
 }
 
-
-
+// 获取当前时间的函数
 async function get_nowTime() {
   const options = {
     timeZone: 'Asia/Shanghai',
@@ -104,8 +115,5 @@ async function get_nowTime() {
     second: '2-digit'
   };
   const timedata = new Date();
-  const formattedDate = new Intl.DateTimeFormat('zh-CN', options).format(timedata);
-
-  return formattedDate
-
+  return new Intl.DateTimeFormat('zh-CN', options).format(timedata);
 }
