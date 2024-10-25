@@ -5,7 +5,7 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'Content-Type',
   'Access-Control-Max-Age': '86400', // 24 hours
-  'Content-Type': 'text/plain'
+  'Content-Type': 'application/json' // 设置为 JSON 格式
 };
 
 export async function POST(request) {
@@ -13,7 +13,7 @@ export async function POST(request) {
   const formData = await request.formData();
   const file = formData.get('file'); // 使用 'file' 字段名
   if (!file) {
-    return new Response('No file uploaded', { status: 400, headers: corsHeaders });
+    return new Response(JSON.stringify({ message: 'No file uploaded' }), { status: 400, headers: corsHeaders });
   }
 
   try {
@@ -28,46 +28,21 @@ export async function POST(request) {
         'Origin': 'https://pic.kamept.com',
         'Referer': 'https://pic.kamept.com/',
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 Edg/130.0.0.0',
-        'Content-Type': 'multipart/form-data'
+        'Content-Type': 'multipart/form-data' // 需要设置为 multipart/form-data
       }
     });
 
-    const resdata = await res.text(); // 获取响应的文本
-    console.log('Response data:', resdata); // 打印响应数据用于调试
+    const resdata = await res.text(); // 直接获取返回的文本
 
-    const urlMatch = resdata.match(/"url":"([^"]+)"/); // 匹配 URL
-
-    if (urlMatch) {
-      const correctImageUrl = urlMatch[1];
-
-      try {
-        if (env.IMG) {
-          const nowTime = await get_nowTime();
-          await insertImageData(env.IMG, correctImageUrl, "", "", 7, nowTime); // 插入数据
-        }
-      } catch (error) {
-        console.error('Failed to insert image data:', error);
-      }
-
-      return new Response(correctImageUrl, {
-        status: 200,
-        headers: corsHeaders,
-      });
-    } else {
-      console.error('Upload failed: No URL found in response');
-      return new Response('Upload failed: No URL found', {
-        status: 500,
-        headers: corsHeaders,
-      });
-    }
+    return new Response(resdata, {
+      status: 200,
+      headers: corsHeaders,
+    });
 
   } catch (error) {
-    console.error('Internal server error:', error); // 打印详细错误信息
     return new Response(`Error: ${error.message}`, {
       status: 500,
       headers: corsHeaders,
     });
   }
 }
-
-// 其他函数保持不变
