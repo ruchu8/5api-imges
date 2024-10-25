@@ -20,57 +20,53 @@ export async function POST(request) {
     const newFormData = new FormData();
     newFormData.append('file', file, file.name); // 上传到目标服务器时使用 'file'
 
-    const res = await fetch('https://api.da8m.cn/api/upload', {
+    const res = await fetch('https://api.vviptuangou.com/api/upload', {
       method: 'POST',
       body: newFormData,
       headers: {
         'Accept': '*/*',
-        'token': '4ca04a3ff8ca3b8f0f8cfa01899ddf8e', // 替换成有效的 token
         'Origin': 'https://mlw10086.serv00.net',
         'Referer': 'https://mlw10086.serv00.net/',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 Edg/130.0.0.0'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36'
       }
     });
 
     const resdata = await res.text(); // 直接获取返回的文本
-    // 解析文本
-    let parsedData;
-    try {
-      parsedData = JSON.parse(resdata); // 尝试解析为 JSON
-    } catch (e) {
-      return new Response('Invalid response format', { status: 500, headers: corsHeaders });
-    }
 
-    let correctImageUrl;
+    // 文本处理，提取图片 URL
+    const statusMatch = resdata.match(/"status":\s*(\d)/);
+    const imgurlMatch = resdata.match(/"imgurl":"([^"]+)"/);
 
-    if (parsedData.status === 1 && parsedData.imgurl) {
-      correctImageUrl = `https://assets.da8m.cn/${parsedData.imgurl}`;
+    if (statusMatch && statusMatch[1] === '1' && imgurlMatch) {
+      const correctImageUrl = `https://assets.vviptuangou.com/${imgurlMatch[1]}`;
+
+      const data = {
+        "url": correctImageUrl,
+        "code": 200,
+        "name": imgurlMatch[1]
+      };
+
+      try {
+        if (env.IMG) {
+          const nowTime = await get_nowTime();
+          await insertImageData(env.IMG, correctImageUrl, "", "", 7, nowTime);
+        }
+      } catch (error) {
+        console.error('Insert image data error:', error);
+      }
+
+      return new Response(correctImageUrl, {
+        status: 200,
+        headers: corsHeaders,
+      });
+
     } else {
-      return new Response(`Error: ${parsedData.message || 'Unknown error'}`, {
+      const message = imgurlMatch ? imgurlMatch[1] : 'Unknown error';
+      return new Response(`Error: ${message}`, {
         status: 500,
         headers: corsHeaders,
       });
     }
-
-    const data = {
-      "url": correctImageUrl,
-      "code": 200,
-      "name": parsedData.imgurl
-    };
-
-    try {
-      if (env.IMG) {
-        const nowTime = await get_nowTime();
-        await insertImageData(env.IMG, correctImageUrl, "", "", 7, nowTime); // 修改为根据需要进行插入
-      }
-    } catch (error) {
-      console.error('Failed to insert image data:', error);
-    }
-
-    return new Response(correctImageUrl, {
-      status: 200,
-      headers: corsHeaders,
-    });
 
   } catch (error) {
     return new Response(`Error: ${error.message}`, {
