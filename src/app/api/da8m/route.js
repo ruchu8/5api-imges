@@ -9,22 +9,23 @@ const corsHeaders = {
 };
 
 export async function POST(request) {
-  console.log('Received request for file upload...'); // 第一步，接收到请求
+  let debugInfo = ''; // 用于存储调试信息
+  debugInfo += 'Received request for file upload...\n';
 
   const { env, cf, ctx } = getRequestContext();
   const formData = await request.formData();
-  const file = formData.get('file'); // 获取文件字段
+  const file = formData.get('file');
   if (!file) {
-    console.log('No file uploaded'); // 没有上传文件
+    debugInfo += 'No file uploaded\n';
     return new Response('No file uploaded', { status: 400 });
   }
 
   const uploadUrl = 'https://api.da8m.cn/api/upload';
   const newFormData = new FormData();
-  newFormData.append('file', file); // 添加文件到 FormData
+  newFormData.append('file', file);
 
   try {
-    console.log('Preparing to send the file to the upload URL:', uploadUrl); // 准备发送请求
+    debugInfo += `Preparing to send the file to the upload URL: ${uploadUrl}\n`;
     const res = await fetch(uploadUrl, {
       method: "POST",
       headers: {
@@ -40,23 +41,17 @@ export async function POST(request) {
       body: newFormData
     });
 
-    console.log('Received response from server with status:', res.status); // 查看响应状态
-
+    debugInfo += `Received response from server with status: ${res.status}\n`;
     const textResponse = await res.text(); // 捕获文本响应
-    console.log('Response Text:', textResponse); // 查看响应文本
+    debugInfo += `Response Text: ${textResponse}\n`; // 查看响应文本
 
     let responseData;
     try {
-      responseData = JSON.parse(textResponse); // 尝试解析为 JSON
-      console.log('Parsed JSON response:', responseData); // 查看解析后的 JSON
+      responseData = JSON.parse(textResponse);
+      debugInfo += `Parsed JSON response: ${JSON.stringify(responseData)}\n`;
     } catch (err) {
-      console.log('Error parsing JSON:', err.message); // JSON 解析错误
-      return Response.json({
-        status: 500,
-        message: `Error parsing JSON: ${err.message}`,
-        success: false,
-        rawResponse: textResponse // 返回原始响应
-      }, {
+      debugInfo += `Error parsing JSON: ${err.message}\n`;
+      return new Response(debugInfo, {
         status: 500,
         headers: corsHeaders,
       });
@@ -69,29 +64,21 @@ export async function POST(request) {
         code: 200,
         message: 'Upload successful'
       };
-      console.log('File uploaded successfully:', fileUrl);
-      return Response.json(data, {
+      debugInfo += `File uploaded successfully: ${fileUrl}\n`;
+      return new Response(debugInfo + JSON.stringify(data), {
         status: 200,
         headers: corsHeaders,
       });
     } else {
-      console.log('Upload failed. Response Status:', responseData.status, 'Message:', responseData.message);
-      return Response.json({
-        status: responseData.status || 500,
-        message: responseData.message || 'Upload failed',
-        success: false
-      }, {
+      debugInfo += `Upload failed. Response Status: ${responseData.status}, Message: ${responseData.message}\n`;
+      return new Response(debugInfo, {
         status: res.status,
         headers: corsHeaders,
       });
     }
   } catch (error) {
-    console.log('Error Occurred:', error); // 输出错误详细信息
-    return Response.json({
-      status: 500,
-      message: `Error: ${error.message}`,
-      success: false
-    }, {
+    debugInfo += `Error Occurred: ${error}\n`;
+    return new Response(debugInfo, {
       status: 500,
       headers: corsHeaders,
     });
