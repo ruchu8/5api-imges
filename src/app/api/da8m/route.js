@@ -12,13 +12,12 @@ export async function POST(request) {
   const { env, cf, ctx } = getRequestContext();
 
   const formData = await request.formData();
-  const file = formData.get('file'); // 确保使用的字段名为 'file'
+  const file = formData.get('file');
   if (!file) {
     return new Response('No file uploaded', { status: 400 });
   }
 
   const uploadUrl = 'https://api.da8m.cn/api/upload';
-
   const newFormData = new FormData();
   newFormData.append('file', file);
 
@@ -38,8 +37,9 @@ export async function POST(request) {
       body: newFormData
     });
 
+    console.log('Response Status:', res.status); // 查看响应状态
     const responseData = await res.json();
-    console.log('Response Data:', responseData); // 添加调试信息
+    console.log('Response Data:', responseData); // 查看响应数据
 
     if (res.ok && responseData.status === 1) {
       const fileUrl = responseData.img; // 图片 URL
@@ -63,6 +63,7 @@ export async function POST(request) {
       });
     }
   } catch (error) {
+    console.log('Error Occurred:', error); // 输出错误详细信息
     return Response.json({
       status: 500,
       message: `Error: ${error.message}`,
