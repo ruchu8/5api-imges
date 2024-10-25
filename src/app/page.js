@@ -510,7 +510,8 @@ export default function Home() {
               <option value="vviptuangou">vviptuangou</option>
               <option value="58img">58img</option>
               <option value="tencent">tencent</option>
-              <option value="csjk">csjk</option>
+              <option value="csjk">国际学院</option>
+              <option value="126">126</option>
 
             </select>
           </div>
