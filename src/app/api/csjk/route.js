@@ -20,8 +20,15 @@ export async function POST(request) {
   const clientIp = ip ? ip.split(',')[0].trim() : 'IP not found';
   const Referer = request.headers.get('Referer') || "Referer";
 
-  if (request.method !== 'POST') {
-    return new Response('Method not allowed', { status: 405, headers: corsHeaders });
+  if (request.method === 'OPTIONS') {
+    return new Response(null, {
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Max-Age': '86400', // 24 hours
+      },
+    });
   }
 
   try {
@@ -32,7 +39,7 @@ export async function POST(request) {
     }
 
     const newFormData = new FormData();
-    newFormData.append('file', file, file.name); // 上传到目标服务器时使用 'file'
+    newFormData.append('file', file); // 上传到目标服务器时使用 'file'
 
     const targetUrl = 'https://api.da8m.cn/api/upload';
 
