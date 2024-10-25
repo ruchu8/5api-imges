@@ -505,7 +505,7 @@ export default function Home() {
               onChange={handleSelectChange} // 当选择框的值发生变化时触发 handleSelectChange 函数
               className="text-lg p-2 border  rounded text-center w-auto sm:w-auto md:w-auto lg:w-auto xl:w-auto  2xl:w-36">
               <option value="tg" >TG(会失效)</option>
-              <option value="tgchannel">TG_Channel</option>
+              <option value="qqkj">QQ空间</option>
               <option value="r2">R2</option>
               <option value="vviptuangou">vviptuangou</option>
               <option value="58img">58img</option>
