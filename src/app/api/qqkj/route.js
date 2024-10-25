@@ -24,7 +24,7 @@ export async function POST(request) {
   payload.append('file', new Blob([arrayBuffer]), imageFile.name);
 
   try {
-    const res = await fetch('https://pic.kamept.com/upload/n', {
+    const res = await fetch('https://pic.kamept.com/upload/y', {
       method: 'POST',
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 Edg/130.0.0.0',
@@ -46,7 +46,7 @@ export async function POST(request) {
       try {
         if (env.IMG) {
           const nowTime = await get_nowTime();
-          await insertImageData(env.IMG, result.url, 'https://pic.kamept.com/', 'IP not found', 8, nowTime);
+          await insertImageData(env.IMG, result.url, 'https://pic.kamept.com/', 'IP not found', 9, nowTime);
         }
       } catch (error) {
         // 处理插入数据库的错误
