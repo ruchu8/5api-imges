@@ -511,7 +511,7 @@ export default function Home() {
               <option value="csjk">国际学院</option>
               <option value="126">126</option>
               <option value="da8m">da8m</option>
-
+              <option value="luguo">测试</option>
 
             </select>
           </div>
