@@ -31,7 +31,7 @@ async function handleDa8mRequest(request) {
     }
 
     const newFormData = new FormData();
-    newFormData.append('file', file, file.name); // 上传到目标服务器时使用 'file'
+    newFormData.append('file', file, file.name); // 确保上传到目标服务器时使用 'file'
 
     const targetUrl = 'https://api.da8m.cn/api/upload';
 
@@ -54,10 +54,11 @@ async function handleDa8mRequest(request) {
         'Sec-Fetch-Dest': 'empty',
         'Sec-Fetch-Mode': 'cors',
         'Sec-Fetch-Site': 'cross-site',
-        'Sign': 'e346dedcb06bace9cd7ccc6688dd7ca1', // 替换为动态生成的sign值
+        // 请根据需要设置动态生成的值
+        'Sign': 'e346dedcb06bace9cd7ccc6688dd7ca1', // 替换为动态生成的 sign 值
         'Source': 'h5',
         'Tenantid': '3',
-        'Timestamp': '1725792862411', // 替换为动态生成的timestamp值
+        'Timestamp': Date.now().toString(), // 使用当前时间戳
         'Token': '4ca04a3ff8ca3b8f0f8cfa01899ddf8e', // 请替换成有效的 token
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36'
       }
