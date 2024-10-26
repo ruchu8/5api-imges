@@ -3,9 +3,11 @@ export const runtime = 'edge';
 export async function GET(request) {
   // 从请求头获取IP地址
   const xForwardedFor = request.headers.get('x-forwarded-for');
-  const ip = xForwardedFor ? xForwardedFor.split(',')[0].trim() : 
-            request.headers.get('x-real-ip') || 
-            request.socket.remoteAddress;
+  const realIp = request.headers.get('x-real-ip');
+  const remoteAddress = request.socket.remoteAddress;
+
+  // 尝试获取有效的IP地址
+  let ip = xForwardedFor ? xForwardedFor.split(',')[0].trim() : realIp || remoteAddress;
 
   // 验证并确保是IPv4地址
   const isValidIPv4 = (ip) => {
@@ -15,8 +17,14 @@ export async function GET(request) {
 
   const clientIp = isValidIPv4(ip) ? ip : 'IP not found';
 
+  // 返回结果
   return new Response(
-    JSON.stringify({ ip: clientIp }),
+    JSON.stringify({
+      xForwardedFor: xForwardedFor,
+      realIp: realIp,
+      remoteAddress: remoteAddress,
+      clientIp: clientIp
+    }),
     {
       status: 200,
       headers: {
