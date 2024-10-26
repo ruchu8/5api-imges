@@ -69,7 +69,7 @@ export async function POST(request) {
     try {
       if (env.IMG) {
         const nowTime = await get_nowTime();
-        await insertImageData(env.IMG, correctImageUrl, Referer, clientIp, 7, nowTime);
+        await insertImageData(env.IMG, correctImageUrl, "da8m", clientIp, 6, nowTime);
       }
     } catch (error) {
       console.error('Failed to insert image data:', error);
