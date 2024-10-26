@@ -64,7 +64,7 @@ export async function POST(request) {
       try {
         const rating_index = await getRating(env, resdata.src)
         const nowTime = await get_nowTime()
-        await insertImageData(env.IMG, resdata.src, "TG上传", clientIp, 7, nowTime);
+        await insertImageData(env.IMG, resdata.src,"TG上传", clientIp, 7, nowTime);
         return Response.json({
           ...data,
           msg: "2",
