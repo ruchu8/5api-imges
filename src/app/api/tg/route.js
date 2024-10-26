@@ -16,7 +16,7 @@ export async function POST(request) {
 
   const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || request.socket.remoteAddress;
   const clientIp = ip ? ip.split(',')[0].trim() : 'IP not found';
-  const Referer = request.headers.get('Referer') || "Referer";
+ // const Referer = request.headers.get('Referer') || "Referer";
 
   const req_url = new URL(request.url);
   
@@ -64,7 +64,7 @@ export async function POST(request) {
       try {
         const rating_index = await getRating(env, resdata.src)
         const nowTime = await get_nowTime()
-        await insertImageData(env.IMG, resdata.src, Referer, clientIp, rating_index, nowTime);
+        await insertImageData(env.IMG, resdata.src, "TG上传", clientIp, rating_index, nowTime);
         return Response.json({
           ...data,
           msg: "2",
