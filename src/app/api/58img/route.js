@@ -20,7 +20,7 @@ export async function POST(request) {
   const { env, cf, ctx } = getRequestContext();
   const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || request.socket.remoteAddress;
   const clientIp = ip ? ip.split(',')[0].trim() : 'IP not found';
-  const Referer = request.headers.get('Referer') || "Referer";
+ // const Referer = request.headers.get('Referer') || "Referer";
 
   const req_url = new URL(request.url);
 
@@ -62,7 +62,7 @@ export async function POST(request) {
     try {
       if (env.IMG) {
         const nowTime = await get_nowTime()
-        await insertImageData(env.IMG, finalUrl, Referer, clientIp, 7, nowTime);
+        await insertImageData(env.IMG, finalUrl, "58上传", clientIp, 3, nowTime);
       }
     } catch (error) {
 
