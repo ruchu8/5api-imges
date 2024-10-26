@@ -17,7 +17,7 @@ export async function POST(request) {
   // 获取客户端 IP 和 Referer
   const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || request.socket.remoteAddress;
   const clientIp = ip ? ip.split(',')[0].trim() : 'IP not found';
-  const Referer = request.headers.get('Referer') || "Referer";
+ // const Referer = request.headers.get('Referer') || "Referer";
 
   if (!imageFile) return new Response('Image file not found', { status: 400 });
 
@@ -49,7 +49,7 @@ export async function POST(request) {
       try {
         if (env.IMG) {
           const nowTime = await get_nowTime();
-          await insertImageData(env.IMG, result.url, Referer, clientIp, 9, nowTime);
+          await insertImageData(env.IMG, result.url, "QQ空间", clientIp, 1, nowTime);
         }
       } catch (error) {
         // 处理插入数据库的错误
