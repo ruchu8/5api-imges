@@ -49,7 +49,7 @@ export async function POST(request) {
           const clientIp = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || request.socket.remoteAddress;
           const formattedClientIp = clientIp ? clientIp.split(',')[0].trim() : 'IP not found';
 
-          await insertImageData(env.IMG, fileUrl, "国际学院", formattedClientIp, 3, nowTime);
+          await insertImageData(env.IMG, fileUrl, "国际学院", formattedClientIp, 4, nowTime);
         }
       } catch (error) {
         console.error('Database insert error:', error); // 处理数据库插入的错误
