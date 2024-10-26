@@ -31,7 +31,7 @@ export default function Home() {
   const [uploading, setUploading] = useState(false);
   const [IP, setIP] = useState('');
   const [Total, setTotal] = useState('?');
-  const [selectedOption, setSelectedOption] = useState('tgchannel'); // 初始选择第一个选项
+  const [selectedOption, setSelectedOption] = useState('qqkj'); // 初始选择第一个选项
   const [isAuthapi, setisAuthapi] = useState(false); // 初始选择第一个选项
   const [Loginuser, setLoginuser] = useState(''); // 初始选择第一个选项
   const [boxType, setBoxtype] = useState("img");
@@ -171,7 +171,7 @@ export default function Home() {
         formData.append(formFieldName, file);
 
         try {
-          const targetUrl = selectedOption === "tgchannel" || selectedOption === "r2"
+          const targetUrl = selectedOption === "qqkj" || selectedOption === "r2"
             ? `/api/enableauthapi/${selectedOption}`
             : `/api/${selectedOption}`;
 
@@ -504,7 +504,6 @@ export default function Home() {
               value={selectedOption} // 将选择框的值绑定到状态中的 selectedOption
               onChange={handleSelectChange} // 当选择框的值发生变化时触发 handleSelectChange 函数
               className="text-lg p-2 border  rounded text-center w-auto sm:w-auto md:w-auto lg:w-auto xl:w-auto  2xl:w-36">
-              <option value="tg" >TG(会失效)</option>
               <option value="qqkj">QQ空间</option>
               <option value="vviptuangou">vviptuangou</option>
               <option value="58img">58img</option>
@@ -512,8 +511,6 @@ export default function Home() {
               <option value="126">126</option>
               <option value="da8m">da8m</option>
               <option value="tg" >TG(会失效)</option>
- 
-
             </select>
           </div>
 
