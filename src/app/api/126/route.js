@@ -15,9 +15,13 @@ export async function POST(request) {
   const imageFile = formData.get('file');
   if (!imageFile) return new Response('Image file not found', { status: 400 });
 
+  // 获取客户端 IP 和 Referer
+  const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || request.socket.remoteAddress;
+  const clientIp = ip ? ip.split(',')[0].trim() : 'IP not found';
+  const Referer = request.headers.get('Referer') || "Referer";  
+
   // 将文件数据转换为 ArrayBuffer
   const arrayBuffer = await imageFile.arrayBuffer();
-  const base64EncodedData = bufferToBase64(arrayBuffer);
 
   // 构建新的请求负载
   const payload = new FormData();
@@ -42,11 +46,11 @@ export async function POST(request) {
         code: 200
       };
 
-      // 这里是插入数据库的部分，您可以根据需要选择是否保留
+      // 插入数据库的部分
       try {
         if (env.IMG) {
           const nowTime = await get_nowTime();
-          await insertImageData(env.IMG, result.url, 'https://pic.kamept.com/', 'IP not found', 8, nowTime);
+          await insertImageData(env.IMG, result.url, Referer, clientIp, 8, nowTime);
         }
       } catch (error) {
         // 处理插入数据库的错误
