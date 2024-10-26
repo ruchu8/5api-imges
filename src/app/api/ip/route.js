@@ -1,54 +1,42 @@
+import { NextResponse } from "next/server";
+import { headers } from 'next/headers'
+import { getRequestContext } from '@cloudflare/next-on-pages';
+
+// ...
+
+
 export const runtime = 'edge';
-
 export async function GET(request) {
-  try {
-    // 从请求头获取IP地址
-    const xForwardedFor = request.headers.get('x-forwarded-for');
-    const realIp = request.headers.get('x-real-ip');
-    const remoteAddress = request.socket.remoteAddress;
+  // 获取客户端的IP地址
+  // const { env, cf, ctx } = getRequestContext();
+  const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || request.socket.remoteAddress;
+  const clientIp = ip ? ip.split(',')[0].trim() : 'IP not found';
 
-    // 尝试获取有效的IP地址
-    let ip = xForwardedFor ? xForwardedFor.split(',')[0].trim() : realIp || remoteAddress;
-
-    // 验证并确保是IPv4地址
-    const isValidIPv4 = (ip) => {
-      const ipv4Pattern = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.|$)){3}/;
-      return ipv4Pattern.test(ip);
+  return new Response(
+    JSON.stringify({
+      ip: clientIp
+    }),
+    {
+      status: 200,
+      headers: {
+        'content-type': 'application/json',
+      },
     }
+  )
 
-    const clientIp = isValidIPv4(ip) ? ip : 'IP not found';
 
-    // 返回 IP 信息
-    return new Response(
-      JSON.stringify({
-        status: 'success',
-        xForwardedFor,
-        realIp,
-        remoteAddress,
-        clientIp
-      }),
-      {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+
+
+}
+
+
+async function insertImageData(env, src, referer, ip, rating, time) {
+  try {
+    const instdata = await env.prepare(
+      `INSERT INTO imginfo (url, referer, ip, rating, total, time)
+           VALUES ('${src}', '${referer}', '${ip}', ${rating}, 1, '${time}')`
+    ).run();
   } catch (error) {
-    // 处理错误并返回相应信息
-    console.error("Error occurred:", error);
-    return new Response(
-      JSON.stringify({
-        status: 'error',
-        message: 'Internal Server Error',
-        details: error.message
-      }),
-      {
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+
   }
 }
