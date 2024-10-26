@@ -10,16 +10,19 @@ const corsHeaders = {
 
 // 处理 POST 请求的异步函数，接收图像文件并将其上传到指定的 URL。
 export async function POST(request) {
-  const { env } = getRequestContext();
+  const { env, cf } = getRequestContext();
   const formData = await request.formData();
   const imageFile = formData.get('file');
+  
+  // 获取客户端 IP 和 Referer
+  const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || request.socket.remoteAddress;
+  const clientIp = ip ? ip.split(',')[0].trim() : 'IP not found';
+  const Referer = request.headers.get('Referer') || "Referer";
+
   if (!imageFile) return new Response('Image file not found', { status: 400 });
 
   // 将文件数据转换为 ArrayBuffer
   const arrayBuffer = await imageFile.arrayBuffer();
-  const base64EncodedData = bufferToBase64(arrayBuffer);
-
-  // 构建新的请求负载
   const payload = new FormData();
   payload.append('file', new Blob([arrayBuffer]), imageFile.name);
 
@@ -42,16 +45,12 @@ export async function POST(request) {
         code: 200
       };
 
-      // 这里是插入数据库的部分，您可以根据需要选择是否保留
+      // 插入数据库的部分
       try {
         if (env.IMG) {
           const nowTime = await get_nowTime();
-          await insertImageData(env.IMG, result.url,Referer,clientIp, 9, nowTime);
+          await insertImageData(env.IMG, result.url, Referer, clientIp, 9, nowTime);
         }
-
-
-
-        
       } catch (error) {
         // 处理插入数据库的错误
       }
@@ -70,7 +69,6 @@ export async function POST(request) {
         headers: corsHeaders,
       });
     }
-
   } catch (error) {
     return Response.json({
       status: 500,
@@ -81,17 +79,6 @@ export async function POST(request) {
       headers: corsHeaders,
     });
   }
-}
-
-// ArrayBuffer 转 Base64
-function bufferToBase64(buf) {
-  var binary = '';
-  var bytes = new Uint8Array(buf);
-  var len = bytes.byteLength;
-  for (var i = 0; i < len; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary);
 }
 
 // 插入数据到数据库的函数
