@@ -172,7 +172,7 @@ export default function Home() {
 
         try {
           const targetUrl = selectedOption === "qqkj" || selectedOption === "r2"
-            ? `/api/enableauthapi/${selectedOption}`
+            ? `/api/${selectedOption}`
             : `/api/${selectedOption}`;
 
           // const response = await fetch("https://img.131213.xyz/api/tencent", {
