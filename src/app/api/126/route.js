@@ -18,7 +18,7 @@ export async function POST(request) {
   // 获取客户端 IP 和 Referer
   const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || request.socket.remoteAddress;
   const clientIp = ip ? ip.split(',')[0].trim() : 'IP not found';
-  const Referer = request.headers.get('Referer') || "Referer";  
+  // const Referer = request.headers.get('Referer') || "Referer";  
 
   // 将文件数据转换为 ArrayBuffer
   const arrayBuffer = await imageFile.arrayBuffer();
@@ -50,7 +50,7 @@ export async function POST(request) {
       try {
         if (env.IMG) {
           const nowTime = await get_nowTime();
-          await insertImageData(env.IMG, result.url, Referer, clientIp, 8, nowTime);
+          await insertImageData(env.IMG, result.url, "126上传", clientIp, 5, nowTime);
         }
       } catch (error) {
         // 处理插入数据库的错误
