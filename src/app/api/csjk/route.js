@@ -9,7 +9,7 @@ const corsHeaders = {
 };
 
 export async function POST(request) {
-  const { env, cf, ctx } = getRequestContext();
+  const { env } = getRequestContext();
 
   const formData = await request.formData();
   const file = formData.get('file'); // 确保使用的字段名为 'file'
@@ -17,7 +17,6 @@ export async function POST(request) {
     return new Response('No file uploaded', { status: 400 });
   }
 
-  const req_url = new URL(request.url);
   const uploadUrl = 'https://xzxx.uir.cn/index/Index/upload.html';
 
   const newFormData = new FormData();
@@ -41,6 +40,21 @@ export async function POST(request) {
 
     if (res.ok && responseData.code === 1) {
       const fileUrl = `https://xzxx.uir.cn${responseData.data.url}`; // 拼接基本地址和图片路径
+
+      // 插入数据库的部分
+      try {
+        if (env.IMG) {
+          const nowTime = await get_nowTime();
+          const Referer = request.headers.get('Referer') || "Referer";
+          const clientIp = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || request.socket.remoteAddress;
+          const formattedClientIp = clientIp ? clientIp.split(',')[0].trim() : 'IP not found';
+
+          await insertImageData(env.IMG, fileUrl, Referer, formattedClientIp, 8, nowTime);
+        }
+      } catch (error) {
+        console.error('Database insert error:', error); // 处理数据库插入的错误
+      }
+
       const data = {
         url: fileUrl,
         code: 200,
@@ -70,4 +84,33 @@ export async function POST(request) {
       headers: corsHeaders,
     });
   }
+}
+
+// 插入数据到数据库的函数
+async function insertImageData(env, src, referer, ip, rating, time) {
+  try {
+    await env.prepare(
+      `INSERT INTO imginfo (url, referer, ip, rating, total, time)
+       VALUES ('${src}', '${referer}', '${ip}', ${rating}, 1, '${time}')`
+    ).run();
+  } catch (error) {
+    console.error('Error inserting data into database:', error);
+    // 打印错误日志以供检查
+  }
+}
+
+// 获取当前时间的函数
+async function get_nowTime() {
+  const options = {
+    timeZone: 'Asia/Shanghai',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour12: false,
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  };
+  const timedata = new Date();
+  return new Intl.DateTimeFormat('zh-CN', options).format(timedata);
 }
