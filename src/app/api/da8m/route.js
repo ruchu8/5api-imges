@@ -60,10 +60,16 @@ export async function POST(request) {
       "name": imgurlMatch[1]
     };
 
+    // 获取 Referer 和客户端 IP
+    const Referer = request.headers.get('Referer') || "Referer";
+    const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || request.socket.remoteAddress;
+    const clientIp = ip ? ip.split(',')[0].trim() : 'IP not found';
+
+    // 插入数据库的部分
     try {
       if (env.IMG) {
         const nowTime = await get_nowTime();
-        await insertImageData(env.IMG, correctImageUrl, "", "", 7, nowTime); // 插入数据
+        await insertImageData(env.IMG, correctImageUrl, Referer, clientIp, 7, nowTime);
       }
     } catch (error) {
       console.error('Failed to insert image data:', error);
