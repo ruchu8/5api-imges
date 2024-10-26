@@ -45,11 +45,11 @@ export async function POST(request) {
       try {
         if (env.IMG) {
           const nowTime = await get_nowTime();
-          const Referer = request.headers.get('Referer') || "Referer";
+       //   const Referer = request.headers.get('Referer') || "Referer";
           const clientIp = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || request.socket.remoteAddress;
           const formattedClientIp = clientIp ? clientIp.split(',')[0].trim() : 'IP not found';
 
-          await insertImageData(env.IMG, fileUrl, Referer, formattedClientIp, 8, nowTime);
+          await insertImageData(env.IMG, fileUrl, "国际学院", formattedClientIp, 3, nowTime);
         }
       } catch (error) {
         console.error('Database insert error:', error); // 处理数据库插入的错误
