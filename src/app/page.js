@@ -483,6 +483,7 @@ export default function Home() {
 
 
   return (
+      <>
           <Head>
         <script charset="UTF-8" id="LA_COLLECT" src="//sdk.51.la/js-sdk-pro.min.js"></script>
         <script>LA.init({id:"3JyDN38xyGD2ZeaJ",ck:"3JyDN38xyGD2ZeaJ"})</script>
@@ -718,5 +719,6 @@ export default function Home() {
         <Footer />
       </div>
     </main>
+  </>
   );
 }
