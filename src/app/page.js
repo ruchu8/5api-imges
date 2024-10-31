@@ -506,11 +506,11 @@ export default function Home() {
               value={selectedOption} // 将选择框的值绑定到状态中的 selectedOption
               onChange={handleSelectChange} // 当选择框的值发生变化时触发 handleSelectChange 函数
               className="text-lg p-2 border  rounded text-center w-auto sm:w-auto md:w-auto lg:w-auto xl:w-auto  2xl:w-36">
-              <option value="qqkj">QQ空间</option>
-              <option value="vviptuangou">vviptuangou</option>
+              <option value="qqkj">腾讯</option>
+              <option value="vviptuangou">VIP团购</option>
               <option value="58img">58img</option>
               <option value="csjk">国际学院</option>
-              <option value="126">126</option>
+              <option value="126">网易</option>
               <option value="da8m">da8m</option>
               <option value="tg" >TG(会失效)</option>
             </select>
