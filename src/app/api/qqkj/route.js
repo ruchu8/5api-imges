@@ -49,7 +49,7 @@ export async function POST(request) {
       try {
         if (env.IMG) {
           const nowTime = await get_nowTime();
-          await insertImageData(env.IMG, result.url, "QQ空间", clientIp, 1, nowTime);
+          await insertImageData(env.IMG, result.url, "腾讯", clientIp, 1, nowTime);
         }
       } catch (error) {
         // 处理插入数据库的错误
