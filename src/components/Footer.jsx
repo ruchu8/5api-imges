@@ -11,15 +11,5 @@
         GitHub Telegraph-Image
       </Link>
     </p>
-    <ul className="text-xs text-gray-500 mt-2">
-      友情链接
-      <li className="list-inline-item"><a href="https://58.linkpc.net" target="_blank" className="text-blue-300 hover:text-red-900 ml-1">免费API接口</a></li>
-      <li className="list-inline-item"><a href="http://ruchu888.ysepan.com" target="_blank" className="text-blue-300 hover:text-red-900 ml-1">传奇射线补丁</a></li>
-      <li className="list-inline-item"><a href="https://592.us.kg" target="_blank" className="text-blue-300 hover:text-red-900 ml-1">如初的博客</a></li>
-      <li className="list-inline-item"><a href="http://ruchu888.ysepan.com/" target="_blank" className="text-blue-300 hover:text-red-900 ml-1">如初的网盘</a></li>
-      <li className="list-inline-item"><a href="http://wcq.us.kg/" target="_blank" className="text-blue-300 hover:text-red-900 ml-1">传奇知识</a></li>
-      <li className="list-inline-item"><a href="https://api.592.us.kg/" target="_blank" className="text-blue-300 hover:text-red-900 ml-1">随机图片API</a></li>
-      <li className="list-inline-item"><a href="https://img.592.us.kg/" target="_blank" className="text-blue-300 hover:text-red-900 ml-1">图床上传</a></li>
-    </ul>
-  </div>
+ 
 </footer>
